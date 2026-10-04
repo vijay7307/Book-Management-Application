@@ -1,20 +1,21 @@
 import bcrypt from "bcrypt";
 import User from "../models/userModel.js";
-import { asyncHandler } from "../utils/asynchandler.js";
+import {asyncHandler} from "../utils/asynchandler.js"
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 
 
-const registerUser = asyncHandler(async (req, res) => {
+const registerUser = asyncHandler(async (req, res, next) => {
     const { name, email, password, role } = req.body;
 
     if(!name || !email || !password || !role){
-        return new ApiError(400, "All fields are required");
+        throw new ApiError(409, "All fields are required");
     }
 
-    const isEmailExist = User.find({email});
+    const isEmailExist = await User.findOne({email});
+    
     if(isEmailExist){
-        return new ApiError(409, "user already exist");
+        throw new ApiError(409, "user already exist");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -31,6 +32,4 @@ const registerUser = asyncHandler(async (req, res) => {
     )
 })
 
-export {
-    registerUser
-}
+export {registerUser}
