@@ -65,7 +65,7 @@ const loginUser = asyncHandler(async (req, res) => {
     res
         .status(200)
         .header("Authorization", `Bearer ${token}`)
-        .json(new ApiResponse(200, "login successfull"))
+        .json(new ApiResponse(200, token, "login successfull"))
 
 })
 
