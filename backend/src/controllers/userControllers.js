@@ -5,6 +5,38 @@ import {asyncHandler} from "../utils/asynchandler.js"
 import { ApiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 
+const generateTokens = async(user) => {
+    try {
+        const accessToken = await jwt.sign(
+            {
+                id: user._id,
+                role: user.role,
+                email: user.email,
+            },
+            process.env.ACCESS_TOKEN_SECRET,
+            {
+                expiresIn: process.env.ACCESS_TOKEN_EXPIRY,
+            },
+        );
+
+        const refreshToken = await jwt.sign(
+            {
+                id: user._id,
+            },
+            process.env.REFRESH_TOKEN_SECRET,
+            {
+                expiresIn: process.env.REFRESH_TOKEN_EXPIRY,
+            },
+        );
+
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
+
+        return { accessToken, refreshToken };
+    } catch (error) {
+        throw new ApiError(500, "error while generating tokens", error)
+    }
+}
 
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password, role } = req.body;
@@ -51,22 +83,36 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid credentials");
     }
 
-    const token = jwt.sign(
-        {
-            role : user.role,
-            user_id : user._id
-        },
-        process.env.JWT_SECRET,
-        {
-            expiresIn : "1d"
-        }
-    )
+    const { accessToken, refreshToken } = await generateTokens(user);
 
-    res
+    const loggedInUser = user.toObject();
+
+    delete loggedInUser.password;
+    delete loggedInUser.refreshToken;
+   
+    const options = {
+        httpOnly : true,
+        secure : true
+    }
+
+    return res
         .status(200)
-        .header("Authorization", `Bearer ${token}`)
-        .json(new ApiResponse(200, token, "login successfull"))
-
+        .header("Authorization", `Bearer ${accessToken}`)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    user : loggedInUser,
+                    accessToken,
+                    refreshToken
+                },
+                "login successfull"
+            )
+        )
 })
+
+const logoutUser = asyncHandler()
 
 export {registerUser, loginUser}
