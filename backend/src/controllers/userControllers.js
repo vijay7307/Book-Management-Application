@@ -71,10 +71,10 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     if(!email || !password) {
-        throw new ApiError(409, "All fields are required");
+        throw new ApiError(400, "All fields are required");
     }
 
-    const user = await User.findOne({email});
+    const user = await User.findOne({email}).select("+password");
 
     if(!user){
         throw new ApiError(404, "invalid credentials");
@@ -107,9 +107,7 @@ const loginUser = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 {
-                    user : loggedInUser,
-                    accessToken,
-                    refreshToken
+                    user : loggedInUser
                 },
                 "login successfull"
             )
@@ -127,7 +125,7 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
     try {
         const decoded = jwt.verify(incomingToken, process.env.REFRESH_TOKEN_SECRET);
 
-        const user = await User.findById(decoded.id)
+        const user = await User.findById(decoded.id);
 
         if(!user){
             throw new ApiError(401, "invalid refresh token")
@@ -149,16 +147,9 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
             .header("Authorization", `Bearer ${accessToken}`)
             .cookie("accessToken", accessToken, options)
             .cookie("refreshToken", refreshToken, options)
-            .json(
-                new ApiResponse(
-                    200,
-                    {
-                        accessToken,
-                        refreshToken,
-                    },
-                    "accessToken refreshed",
-                ),
-            );
+            .json({
+                message: "access token refreshed successfully"
+            });
 
 
     } catch (error) {
