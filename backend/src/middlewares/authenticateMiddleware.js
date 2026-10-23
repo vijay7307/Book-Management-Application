@@ -15,7 +15,6 @@ const authenticate = (req, res, next) => {
             token,
             process.env.ACCESS_TOKEN_SECRET
         );
-        console.log(decoded);
         req.user = decoded;
         next();
 

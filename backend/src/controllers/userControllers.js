@@ -77,7 +77,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const user = await User.findOne({email}).select("+password");
 
     if(!user){
-        throw new ApiError(404, "invalid credentials");
+        throw new ApiError(401, "invalid credentials");
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -116,7 +116,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async(req, res) => {
     await User.findByIdAndUpdate(
-        req.user._id,
+        req.user.id,
         {
             $unset : {
                 refreshToken : 1
