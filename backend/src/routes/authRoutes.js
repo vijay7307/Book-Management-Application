@@ -2,7 +2,8 @@ import {Router} from "express";
 import { 
     registerUser,
     loginUser,
-    refreshAccessToken
+    refreshAccessToken,
+    logoutUser
 } from "../controllers/userControllers.js";
 import authenticate from "../middlewares/authenticateMiddleware.js";
 
@@ -16,5 +17,6 @@ router.post("/refresh-token", refreshAccessToken)
 router.get("/profile", authenticate, (req, res) => {
     res.send("user profile");
 })
+router.post("/logout", authenticate, logoutUser);
 
 export default router;
