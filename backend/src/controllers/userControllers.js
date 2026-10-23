@@ -41,8 +41,8 @@ const generateTokens = async(user) => {
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password, role } = req.body;
 
-    if(!name || !email || !password || !role){
-        throw new ApiError(409, "All fields are required");
+    if(!name || !email || !password){
+        throw new ApiError(400, "All fields are required");
     }
 
     const isEmailExist = await User.findOne({email});
@@ -57,11 +57,14 @@ const registerUser = asyncHandler(async (req, res) => {
         name,
         email, 
         password : hashedPassword,
-        role,
     })
 
+    const createdUser = await User.findById(user._id).select(
+        "-password -refreshToken",
+    );
+
     return res.status(201).json(
-        new ApiResponse(200, user, "user registered successfully")
+        new ApiResponse(201, createdUser, "user registered successfully")
     )
 })
 
