@@ -95,12 +95,13 @@ const loginUser = asyncHandler(async (req, res) => {
    
     const options = {
         httpOnly : true,
-        secure : true
+        secure : process.env.NODE_ENV === "production",
+        sameSite : "lax",
+        path : "/"
     }
 
     return res
         .status(200)
-        .header("Authorization", `Bearer ${accessToken}`)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
         .json(
@@ -129,7 +130,9 @@ const logoutUser = asyncHandler(async(req, res) => {
 
     const options = {
         httpOnly : true,
-        secure : true
+        secure : process.env.NODE_ENV === "production",
+        sameSite : "lax",
+        path : "/"
     }
 
     return res
@@ -166,12 +169,13 @@ const refreshAccessToken = asyncHandler(async(req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true,
+        secure : process.env.NODE_ENV === "production",
+        sameSite : "lax",
+        path : "/",
     };
 
     return res
         .status(200)
-        .header("Authorization", `Bearer ${accessToken}`)
         .cookie("accessToken", accessToken, options)
         .cookie("refreshToken", refreshToken, options)
         .json({

@@ -2,13 +2,11 @@ import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/apiError.js";
 
 const authenticate = (req, res, next) => {
-    const authHeader = req.headers.authorization;
+    const token = req.cookies?.accessToken;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!token) {
         throw new ApiError(401, "authentication required");
     }
-
-    const token = authHeader.split(" ")[1];
 
     try {
         const decoded = jwt.verify(
